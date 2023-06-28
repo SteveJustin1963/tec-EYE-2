@@ -1,4 +1,11 @@
 # tec-EYE-2
+
+
+![image](https://github.com/SteveJustin1963/tec-EYE-2/assets/58069246/bf1b8a80-b41d-4577-814f-2461f2c01500)
+
+![image](https://github.com/SteveJustin1963/tec-EYE-2/assets/58069246/c03e3b7c-72e4-4fed-9917-c4514ebec4fe)
+
+
 get an image from PMW3360DM and send it out on uart 4800
 
 
