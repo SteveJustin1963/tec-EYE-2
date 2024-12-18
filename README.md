@@ -6,49 +6,115 @@
 ![image](https://github.com/SteveJustin1963/tec-EYE-2/assets/58069246/c03e3b7c-72e4-4fed-9917-c4514ebec4fe)
 
 
-get an image from PMW3360DM and send it out on uart 4800
-
-
-ardunio sketch
-`te2.ino`
-
-```
-START
-- Initialize SPI communication
-- Set SPI data mode and clock divider
-- Configure chip select pin as OUTPUT
-- Deselect image sensor
-
-LOOP:
-- Declare and initialize the receive buffer for image data
-- Call get_image_data function to retrieve image data
-- Print the received image data on the Serial monitor
-- Add a delay of 1 second
-
-END
-```
-
-## summary of each line and its purpose:
-
-- `#include <SPI.h>`: Includes the SPI library for SPI communication.
-- `const int CS_PIN = 10;`: Declares a constant integer variable to hold the chip select pin number.
-- `void setup() {`: Begins the definition of the setup function.
-- `SPI.begin();`: Initializes SPI communication.
-- `SPI.setDataMode(SPI_MODE3);`: Sets the SPI data mode to mode 3 (clock normally high, data captured on falling edge).
-- `SPI.setClockDivider(SPI_CLOCK_DIV16);`: Sets the SPI clock speed to one-sixteenth of the system clock frequency.
-- `pinMode(CS_PIN, OUTPUT);`: Configures the chip select pin as an output.
-- `digitalWrite(CS_PIN, HIGH);`: Deselects the image sensor by setting the chip select pin to a high logic level.
-- `Serial.begin(4800);`: Initializes the Serial communication at a baud rate of 4800.
-- `void get_image_data(uint8_t *rx_buf) {`: Defines the function `get_image_data` that takes a pointer to an array as a parameter.
-- `digitalWrite(CS_PIN, LOW);`: Selects the image sensor by setting the chip select pin to a low logic level.
-- `SPI.transfer(0x42);`: Sends a command (0x42) to the image sensor via SPI communication.
-- `for (int i = 0; i < 3; i++) { rx_buf[i] = SPI.transfer(0xFF); }`: Receives three bytes of image data from the image sensor and stores them in the `rx_buf` array.
-- `digitalWrite(CS_PIN, HIGH);`: Deselects the image sensor by setting the chip select pin to a high logic level.
-- `void loop() {`: Begins the definition of the loop function.
-- `uint8_t rx_buf[3] = {0x00, 0x00, 0x00};`: Declares an array to store the received image data and initializes it with three zeros.
-- `get_image_data(rx_buf);`: Calls the `get_image_data` function to retrieve image data and store it in the `rx_buf` array.
-- Serial print statements: Prints the received image data as hexadecimal values to the Serial monitor.
-- `delay(1000);`: Adds a delay of 1 second before the next iteration of the loop function.
-
 
  
+
+## Overview
+A project to interface the PMW3360DM optical sensor with the TEC-1 computer, capturing image data and transmitting it via UART at 4800 baud.
+
+## Hardware Requirements
+- TEC-1 Computer
+- PMW3360DM optical sensor
+- SPI interface connections
+- UART interface
+
+## Connection Details
+
+### SPI Connections (PMW3360DM to TEC-1)
+- VCC → 5V
+- GND → GND
+- CS → D10 (Chip Select)
+- MOSI → D11
+- MISO → D12
+- SCK → D13
+
+### UART Connections
+- GND → GND
+- TX → D0
+- RX → D1
+
+## MINT Implementation
+
+The original Arduino code has been converted to MINT for the TEC-1. Here's the MINT version:
+
+```mint
+// Define variables for SPI control
+:A 10 p!         // CS pin number stored in p
+     #FF q!      // SPI transfer byte stored in q
+     0 r!        // Result storage in r
+;
+
+// SPI initialization
+:B p 1 /O        // Set CS pin high
+;
+
+// SPI chip select low
+:C p 0 /O        // Set CS pin low
+;
+
+// SPI transfer function
+:D #80 /O q /O   // Send byte on SPI bus (Port 80)
+   #81 /I r!     // Read result from SPI bus (Port 81)
+;
+
+// Get image data function
+:E C             // CS low
+   #42 q! D      // Send read command
+   3(            // Loop 3 times
+     #FF q! D    // Read byte
+     r .         // Print byte
+   )
+   B             // CS high
+;
+
+// Main loop
+:M B             // Initialize CS
+   /U(           // Infinite loop
+     E           // Get image data
+     1000()      // Delay
+   )
+;
+
+// Run program
+M
+```
+
+## Protocol Details
+
+The PMW3360DM uses the following communication protocol:
+1. CS pin is set low to begin communication
+2. Send command byte (0x42 for image data)
+3. Read 3 bytes of image data
+4. CS pin is set high to end communication
+
+## Operation
+
+1. Initialize SPI by setting CS pin high
+2. Enter main loop:
+   - Pull CS low
+   - Send read command (0x42)
+   - Read 3 bytes of image data
+   - Pull CS high
+   - Delay 1 second
+   - Repeat
+
+## Data Format
+
+The PMW3360DM returns 3 bytes of image data per read:
+- Byte 1: Image data high byte
+- Byte 2: Image data middle byte
+- Byte 3: Image data low byte
+
+## Notes
+
+- The MINT implementation uses ports 0x80 and 0x81 for SPI communication
+- The program runs continuously until interrupted
+- Data is output via UART at 4800 baud
+- CS pin must be toggled between readings
+
+## Future Improvements
+
+1. Add error checking for SPI communication
+2. Implement image data processing
+3. Add configurable sensor settings
+4. Implement frame buffering
