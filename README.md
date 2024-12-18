@@ -51,7 +51,7 @@ The original Arduino code has been converted to MINT for the TEC-1. Here's the M
 // SPI chip select low
 :C p 0 /O        // Set CS pin low
 ;
-
+ 
 // SPI transfer function
 :D #80 /O q /O   // Send byte on SPI bus (Port 80)
    #81 /I r!     // Read result from SPI bus (Port 81)
