@@ -50,3 +50,5 @@ END
 - Serial print statements: Prints the received image data as hexadecimal values to the Serial monitor.
 - `delay(1000);`: Adds a delay of 1 second before the next iteration of the loop function.
 
+
+ 
